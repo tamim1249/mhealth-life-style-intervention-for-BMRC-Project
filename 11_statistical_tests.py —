@@ -1,0 +1,42 @@
+from scipy import stats
+
+pairs = [
+    ('before_mean_systolic_bp', 'after_mean_systolic_bp', 'Systolic BP (mmHg)'),
+    ('before_mean_diastolic_bp', 'after_mean_diastolic_bp', 'Diastolic BP (mmHg)'),
+    ('before_bmi', 'after_bmi', 'BMI'),
+    ('before_weight_kg', 'after_weight_kg', 'Weight (kg)'),
+    ('before_height_cm', 'after_height_cm', 'Height (cm)'),
+    ('before_fbs', 'after_fbs', 'Fasting Blood Sugar'),
+    ('before_rbs', 'after_rbs', 'Random Blood Sugar'),
+    ('before_hba1c', 'after_hba1c', 'HbA1c'),
+    ('before_total_cholesterol', 'after_total_cholesterol', 'Total Cholesterol'),
+    ('before_ldl', 'after_ldl', 'LDL'),
+    ('before_hdl', 'after_hdl', 'HDL'),
+]
+
+rows = []
+for before_col, after_col, label in pairs:
+    data = df[[before_col, after_col]].dropna()
+    n = len(data)
+    if n < 10:
+        continue
+    mean_before = data[before_col].mean()
+    std_before = data[before_col].std()
+    mean_after = data[after_col].mean()
+    std_after = data[after_col].std()
+    mean_change = mean_after - mean_before
+    t_stat, p_val = stats.ttest_rel(data[before_col], data[after_col])
+    sig = '***' if p_val < 0.001 else ('**' if p_val < 0.01 else ('*' if p_val < 0.05 else 'ns'))
+    rows.append({
+        'Variable': label,
+        'N': n,
+        'Before Mean (SD)': f"{mean_before:.2f} ({std_before:.2f})",
+        'After Mean (SD)': f"{mean_after:.2f} ({std_after:.2f})",
+        'Mean Change': f"{mean_change:.2f}",
+        't-statistic': f"{t_stat:.3f}",
+        'p-value': f"{p_val:.4f}",
+        'Sig.': sig
+    })
+
+result_table = pd.DataFrame(rows)
+print(result_table.to_string(index=False))
